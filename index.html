@@ -48,6 +48,7 @@
         offerer.createOffer(function (offer) {
             offerer.setLocalDescription(offer);
             console.log(offer)
+            console.log(' and \n')
             console.log(video_stream)
             answererPeer(offer, video_stream);
         }, function() {}, mediaConstraints);
@@ -55,7 +56,6 @@
     /* answerer */
 
     function answererPeer(offer, video_stream) {
-    	alert(offer)
         answerer = new RTCPeerConnection(window.iceServers);
         answerer.addStream(video_stream);
 
