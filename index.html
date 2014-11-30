@@ -1,0 +1,98 @@
+<div style="text-align:center;">
+    <h2>User1</h2>
+    <video id="peer1" autoplay controls></video>
+    <h2>User2</h2>
+    <video id="peer2" autoplay controls></video>
+</div>
+<script type="text/javascript">
+	 var mediaConstraints = {
+		optional: [],
+		mandatory: {
+			OfferToReceiveAudio: true,
+			OfferToReceiveVideo: true
+		}
+	};
+    var offerer, answerer;
+    var offererToAnswerer = document.getElementById('peer1');
+    var answererToOfferer = document.getElementById('peer2');
+
+    window.RTCPeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+    window.RTCSessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
+    window.RTCIceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
+
+    navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+    window.URL = window.webkitURL || window.URL;
+
+    window.iceServers = {
+        iceServers: [{
+                url: 'stun:23.21.150.121'
+            }
+        ]
+    };
+    /* offerer */
+
+    function offererPeer(video_stream) {
+        offerer = new RTCPeerConnection(window.iceServers);
+        offerer.addStream(video_stream);
+
+        offerer.onaddstream = function (event) {
+            offererToAnswerer.src = URL.createObjectURL(event.stream);
+            offererToAnswerer.play();
+        };
+
+        offerer.onicecandidate = function (event) {
+            if (!event || !event.candidate) return;
+            answerer.addIceCandidate(event.candidate);
+        };
+
+        offerer.createOffer(function (offer) {
+            offerer.setLocalDescription(offer);
+            console.log(offer)
+            console.log(video_stream)
+            answererPeer(offer, video_stream);
+        }, function() {}, mediaConstraints);
+    }
+    /* answerer */
+
+    function answererPeer(offer, video_stream) {
+    	alert(offer)
+        answerer = new RTCPeerConnection(window.iceServers);
+        answerer.addStream(video_stream);
+
+        answerer.onaddstream = function (event) {
+            answererToOfferer.src = URL.createObjectURL(event.stream);
+            answererToOfferer.play();
+        };
+
+        answerer.onicecandidate = function (event) {
+            if (!event || !event.candidate) return;
+            offerer.addIceCandidate(event.candidate);
+        };
+
+        answerer.setRemoteDescription(offer);
+        answerer.createAnswer(function (answer) {
+            answerer.setLocalDescription(answer);
+            offerer.setRemoteDescription(answer);
+        }, function() {}, mediaConstraints);
+    }
+    var video_constraints = {
+        mandatory: {},
+        optional: []
+    };
+
+    function getUserMedia(callback) {
+        var n = navigator;
+        n.getMedia = n.webkitGetUserMedia || n.mozGetUserMedia;
+        n.getMedia({
+            audio: true,
+            video: video_constraints
+        }, callback, onerror);
+
+        function onerror(e) {
+			alert(JSON.stringify(e, null, '\t'));
+        }
+    }
+    getUserMedia(function (video_stream) {
+        offererPeer(video_stream);
+    });
+</script>

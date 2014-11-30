@@ -1,4 +1,1 @@
-webrtc
-======
-
-Experiments with WebRTC
+WebRTC + NodeJS + Computer Vision + OpenCV
